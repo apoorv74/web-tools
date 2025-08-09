@@ -1,6 +1,9 @@
 # 📧 Email Image Stitcher
 
-A simple, free web tool (vibe-coded by Claude using [Claude Code](https://www.anthropic.com/claude-code)) to combine multiple email screenshots into a single seamless image. Perfect for documentation, sharing conversations, or creating visual records of email threads.
+A simple, free web tool (vibe-coded by Claude) to combine multiple email screenshots into a single seamless image. Perfect for documentation, sharing conversations, or creating visual records of email threads.
+
+## Prompt Details
+[Claude](https://claude.ai) created an artifact when I uploaded a couple of images and asked to stitch the two. 
 
 ## ✨ Features
 
