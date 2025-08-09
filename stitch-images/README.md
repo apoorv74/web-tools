@@ -26,7 +26,7 @@ A simple, free web tool (vibe-coded by Claude using [Claude Code](https://www.an
 
 ## 🖥️ Screenshot
 
-![Email Stitcher Interface](screenshot.png)
+![Email Stitcher Interface](email-image-tool-screenshot.png)
 
 *The clean, intuitive interface makes combining email images effortless*
 
@@ -48,7 +48,7 @@ email-stitcher/
 
 ## 🌐 Live Demo
 
-Try it out: [Email Image Stitcher]()
+Try it out: [Email Image Stitcher](https://apoorv74.github.io/web-tools/stitch-images/)
 
 ## 🔧 Local Development
 
