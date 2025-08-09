@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Image Stitcher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .upload-btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .upload-btn:hover {
+            background: #0056b3;
+        }
+        .preview-container {
+            margin: 20px 0;
+        }
+        .preview-image {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .canvas-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-width: 100%;
+        }
+        .controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .stitch-btn {
+            background: #28a745;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .stitch-btn:hover {
+            background: #218838;
+        }
+        .stitch-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .download-btn {
+            background: #17a2b8;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        .download-btn:hover {
+            background: #138496;
+        }
+        .instructions {
+            background: #e9f4ff;
+            border: 1px solid #b8daff;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Email Image Stitcher</h1>
+        
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <p>1. Upload two email screenshots that you want to stitch together vertically</p>
+            <p>2. The tool will automatically align and combine them into a single continuous image</p>
+            <p>3. Click "Stitch Images" to combine them</p>
+            <p>4. Download the result when ready</p>
+        </div>
+
+        <div class="upload-area" id="uploadArea1">
+            <p>Drop first email image here or click to upload</p>
+            <button class="upload-btn" onclick="document.getElementById('file1').click()">Choose First Image</button>
+            <input type="file" id="file1" accept="image/*">
+        </div>
+
+        <div class="preview-container" id="preview1"></div>
+
+        <div class="upload-area" id="uploadArea2">
+            <p>Drop second email image here or click to upload</p>
+            <button class="upload-btn" onclick="document.getElementById('file2').click()">Choose Second Image</button>
+            <input type="file" id="file2" accept="image/*">
+        </div>
+
+        <div class="preview-container" id="preview2"></div>
+
+        <div class="controls">
+            <button class="stitch-btn" id="stitchBtn" onclick="stitchImages()" disabled>Stitch Images</button>
+            <button class="download-btn" id="downloadBtn" onclick="downloadImage()" style="display: none;">Download Result</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="resultCanvas" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let image1 = null;
+        let image2 = null;
+
+        // File upload handlers
+        document.getElementById('file1').addEventListener('change', function(e) {
+            handleFileSelect(e.target.files[0], 1);
+        });
+
+        document.getElementById('file2').addEventListener('change', function(e) {
+            handleFileSelect(e.target.files[0], 2);
+        });
+
+        // Drag and drop handlers
+        setupDragAndDrop('uploadArea1', 1);
+        setupDragAndDrop('uploadArea2', 2);
+
+        function setupDragAndDrop(areaId, imageNum) {
+            const area = document.getElementById(areaId);
+            
+            area.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+
+            area.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                area.classList.remove('dragover');
+            });
+
+            area.addEventListener('drop', function(e) {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileSelect(files[0], imageNum);
+                }
+            });
+        }
+
+        function handleFileSelect(file, imageNum) {
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    if (imageNum === 1) {
+                        image1 = img;
+                        showPreview(img, 'preview1');
+                    } else {
+                        image2 = img;
+                        showPreview(img, 'preview2');
+                    }
+                    
+                    // Enable stitch button if both images are loaded
+                    if (image1 && image2) {
+                        document.getElementById('stitchBtn').disabled = false;
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showPreview(img, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            const previewImg = img.cloneNode();
+            previewImg.className = 'preview-image';
+            previewImg.style.maxHeight = '200px';
+            container.appendChild(previewImg);
+        }
+
+        function stitchImages() {
+            if (!image1 || !image2) {
+                alert('Please upload both images first');
+                return;
+            }
+
+            const canvas = document.getElementById('resultCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Calculate dimensions
+            const maxWidth = Math.max(image1.width, image2.width);
+            const totalHeight = image1.height + image2.height;
+
+            // Set canvas size
+            canvas.width = maxWidth;
+            canvas.height = totalHeight;
+
+            // Draw first image at the top
+            const x1 = (maxWidth - image1.width) / 2; // Center horizontally
+            ctx.drawImage(image1, x1, 0);
+
+            // Draw second image below the first
+            const x2 = (maxWidth - image2.width) / 2; // Center horizontally
+            ctx.drawImage(image2, x2, image1.height);
+
+            // Show result
+            canvas.style.display = 'block';
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+        }
+
+        function downloadImage() {
+            const canvas = document.getElementById('resultCanvas');
+            
+            // Convert canvas to blob for better browser compatibility
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'stitched_emails.png';
+                link.href = url;
+                
+                // Append to body, click, then remove (for better compatibility)
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Clean up the URL object
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+    </script>
+</body>
+</html>
